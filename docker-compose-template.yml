@@ -1,0 +1,47 @@
+version: "3.9"
+
+networks:
+  network_name_1:
+
+services:
+  service_name_1:
+    container_name: container_name
+    hostname: hostname_name
+    build: .
+    # or
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: image:version
+    mem_limit: 2g
+    networks:
+      - network_name_1
+    ports:
+      - host_port_1:container_1
+      - host_port_2:container_2
+      ...
+    volumes:
+      - host_volume_1:container_volume_1
+      - host_volume_2:container_volume_2
+      ...
+    healthcheck:
+      test: ["CMD", "for", "check", "with", "args"]
+      interval: 5s
+      timeour: 5s
+      retries: 5
+    environment:
+      KEY_1: VALUE_1
+      KEY_2: VALUE_2
+      KEY_3: "${VALUE_3}" # type data defined in .env file
+      ...
+    links:
+      - link_1
+      - link_2
+      ...
+    depends_on:
+      some_container:
+        condition: service_started
+    command: ["CMD", "with", "args"]
+
+  service_name_2:
+    ...

@@ -1,0 +1,89 @@
+version: "2.7"
+
+networks:
+  cassandra:
+
+services:
+  cassandra0x01:
+    image: cassandra:4
+    container_name: cassandra0x01
+    hostname: cassandra0x01
+    mem_limit: 3400m
+    networks:
+      - cassandra
+    ports:
+      - 9042:9042
+    volumes:
+      - ./files/etc/cassandra0x01:/etc/cassandra
+      - ./files/data/cassandra0x01:/var/lib/cassandra
+    healthcheck:
+      test: ["CMD", "cqlsh", "-c", "describe keyspaces"] # system keyspace exists by default in started cassandra
+      interval: 5s
+      timeout: 5s
+      retries: 60
+    environment: &environment
+      CASSANDRA_SEEDS: "cassandra0x01,cassandra0x02"
+      CASSANDRA_DC: Test
+      CASSANDRA_RACK: East
+      CASSANDRA_ENDPOINT_SNITCH: GossipingPropertyFileSnitch
+      CASSANDRA_NUM_TOKENS: 126
+
+  cassandra0x02:
+    image: cassandra:4
+    container_name: cassandra0x02
+    hostname: cassandra0x02
+    mem_limit: 3400m
+    networks:
+      - cassandra
+    ports:
+      - 9043:9042
+    volumes:
+      - ./files/etc/cassandra0x02:/etc/cassandra
+      - ./files/data/cassandra0x02:/var/lib/cassandra
+    healthcheck:
+      test: ["CMD", "cqlsh", "-c", "describe keyspaces"] # system keyspace exists by default in started cassandra
+      interval: 5s
+      timeout: 5s
+      retries: 60
+    environment: *environment
+    depends_on:
+      cassandra0x01:
+        condition: service_started
+
+  cassandra0x03:
+    image: cassandra:4
+    container_name: cassandra0x03
+    hostname: cassandra0x03
+    mem_limit: 3400m
+    networks:
+      - cassandra
+    ports:
+      - 9044:9042
+    volumes:
+      - ./files/etc/cassandra0x03:/etc/cassandra
+      - ./files/data/cassandra0x03:/var/lib/cassandra
+    healthcheck:
+      test: ["CMD", "cqlsh", "-c", "describe keyspaces"] # system keyspace exists by default in started cassandra
+      interval: 5s
+      timeout: 5s
+      retries: 60
+    environment: *environment
+    depends_on:
+      cassandra0x02:
+        condition: service_started
+
+  reaper0x03:
+    image: thelastpickle/cassandra-reaper:3.2.0
+    container_name: reaper0x03
+    hostname: reaper0x03
+    mem_limit: 512m
+    networks:
+      - cassandra
+    ports:
+      - 8080:8080
+      - 8081:8081
+    environment:
+      REAPER_JMX_AUTH_USERNAME: reaperUser
+      REAPER_JMX_AUTH_PASSWORD: reaperPass
+      # REAPER_STORAGE_TYPE: cassandra
+      # REAPER_CASS_KEYSPACE: reaper_db
